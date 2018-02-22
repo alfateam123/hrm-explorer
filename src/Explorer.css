@@ -1,0 +1,40 @@
+.explorer-container {
+  display: flex;
+  flex-direction: row;
+
+  height: 100vh;
+}
+
+.explorer-container .code-explorer {
+  width: 33vw;
+  height: 100%;
+}
+.explorer-container .code-explorer textarea {
+  width: 100%;
+  height: 100%;
+
+  font-size: 24px;
+}
+
+
+.explorer-container .display {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+}
+
+.explorer-container .code-state {
+  display: flex;
+  flex-direction: row;
+
+  width: 100%;
+  height: 100vh;
+  justify-content: space-between;
+  vertical-align: middle;
+}
+
+.explorer-container .code-state div {
+  display: flex;
+  flex-direction: column;
+}
