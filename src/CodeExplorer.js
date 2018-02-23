@@ -1,16 +1,17 @@
 import React, {Component} from "react";
+import "./CodeExplorer.css";
 
 export class CodeExplorer extends Component {
 
 	render() {
-		const code = this.props.code || [];
-
+		const currentInstructionCounter = this.props.dump.internal_state.instruction_counter;
 		return <div className="code-explorer">
-			<textarea readOnly={true}>{code.reduce(
-				function(acc, item){
-					return acc + "\n" + item
-				}, ""
-			)}</textarea>
+			{
+				this.props.code.map((line, index) => {
+						const currentClass = (index === currentInstructionCounter) ? "current" : "";
+						return <p className={`code-explorer-item ${currentClass}`}>{line}</p>;
+				})
+			}
 		</div>;
 	}
 }
