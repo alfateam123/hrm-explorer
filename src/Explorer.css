@@ -38,3 +38,8 @@
   display: flex;
   flex-direction: column;
 }
+
+.error-space {
+  color: dark-red;
+  border: 5px dashed red;
+}
