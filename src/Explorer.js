@@ -44,7 +44,7 @@ class Explorer extends Component {
 
 	render() {
 		return <div className="explorer-container">
-			<CodeExplorer code={this.props.code} />
+			<CodeExplorer code={this.props.code} dump={this.state.currentDump} />
 			<div className="display">
 				<CodeStepDashboard
 					showPrev={this.showPrev}
