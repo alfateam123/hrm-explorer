@@ -1,0 +1,10 @@
+.code-explorer {
+  border-box: 1px solid black;
+}
+
+.code-explorer-item {
+  background-color: white;
+}
+.code-explorer-item.current {
+  background-color: lime;
+}
