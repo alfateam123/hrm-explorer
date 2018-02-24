@@ -11,9 +11,9 @@ export class CodeStateViewer extends Component {
 
 	render() {
 		const state = this.props.dump.internal_state;
-		const memory = state.memory.map(memcell => <div className="memory-cell">{this.renderValue(memcell)}</div>);
-		const input_tape = state.input_tape.map(input => <li>{this.renderValue(input)}</li>);
-		const output_tape = state.output_tape.map(output => <li>{this.renderValue(output)}</li>);
+		const memory = state.memory.map((memcell, _index) => <div className="memory-cell" key={this.renderValue(memcell)+_index}>{this.renderValue(memcell)}</div>);
+		const input_tape = state.input_tape.map((input, _index) => <li key={_index}>{this.renderValue(input)}</li>);
+		const output_tape = state.output_tape.map((output, _index) => <li key={_index}>{this.renderValue(output)}</li>);
 		return <div>
 			{this.props.errors?
 				<div className="error-space">{this.props.errors}</div>
