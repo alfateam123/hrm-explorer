@@ -7,6 +7,7 @@ export class CodeStepDashboard extends Component {
 			<div id="prev" onClick={this.props.showPrev}>PREV</div>
 			<div id="next" onClick={this.props.showNext}>NEXT</div>
 			<div id="reset" onClick={this.props.reset}>RESET</div>
+			<div id="run" onClick={this.props.run}>RUN</div>
 		</div>;
 	}
 }
