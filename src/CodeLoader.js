@@ -1,4 +1,5 @@
 import React, {Component} from "react";
+import AJAX from "./sa";
 
 export class CodeLoader extends Component {
 
@@ -6,11 +7,6 @@ export class CodeLoader extends Component {
 		super(props);
 		this.code = null;
 		this.dumps = null;
-	}
-
-	dejsonifyCode() {
-		const json_code = this.codeTextArea.value;
-		return this.dejsonify(json_code);
 	}
 
 	dejsonify(json_code) {
@@ -47,21 +43,21 @@ export class CodeLoader extends Component {
 			return JSON.parse(line);
 		}
 		catch(e){
-			console.log("parse_dump_line breaks here", line);
+			console.log("parse_dump_line breaks here", line, e);
 			return null;
 		}
 	}
 
-	readCode = (evt) => {
-		let file = evt.target.files[0];
-		let reader = new FileReader();
-		var self = this;
-		reader.onload = (e) => {
-			const orig = e.target.result;
-			self.code = this.dejsonify(orig);
-		}
-		reader.readAsText(file);
-	}
+	// readCode = (evt) => {
+	// 	let file = evt.target.files[0];
+	// 	let reader = new FileReader();
+	// 	var self = this;
+	// 	reader.onload = (e) => {
+	// 		const orig = e.target.result;
+	// 		self.code = this.dejsonify(orig);
+	// 	}
+	// 	reader.readAsText(file);
+	// }
 
 	readDump = (evt) => {
 		let file = evt.target.files[0];
@@ -76,17 +72,41 @@ export class CodeLoader extends Component {
 		reader.readAsText(file);
 	}
 
+    request = () => {
+        var ajax = null;
+        try {
+            ajax = new AJAX("http://127.0.0.1:5000/");
+        } catch (e) {
+            // handle error (XMLHttpRequest object not supported)
+        }
+
+        ajax.post('http://127.0.0.1:5000/build', (jsonAssembledCode) => {
+            ajax.post('http://127.0.0.1:5000/run', (executionStatesList) => {
+                this.code = this.dejsonify(JSON.stringify(JSON.parse(jsonAssembledCode).code));
+                this.dumps = JSON.parse(executionStatesList).states;
+                this.onLoadClicked();
+            }, function (statusCode) { // Handle failure
+                console.log("run error: ", statusCode);
+                alert("could not run the application!?!?!?!");
+            }, JSON.stringify({
+                code: JSON.parse(jsonAssembledCode).code,
+                input: JSON.parse(this.inputTextDom.value)
+            }));
+
+        }, function (statusCode) {
+            console.log("build error: ", statusCode);
+            alert("there was an error while compiling. syntax error, maybe?");
+        }, JSON.stringify({code: this.codeTextDom.value}));
+
+    };
+
 	render() {
 		return <div>
-			<div onClick={this.onLoadClicked}><p>LOAD > </p></div>
 			<div>
-			{/*<textarea ref={(elem) => this.codeTextArea = elem } id="loader-code"></textarea>*/}
-			<input type="file" id="code-file" name="codeFile"
-		         ref={(elem) => this.codeFileDom = elem } onChange={this.readCode} />
-			<input type="file" id="dump-file" name="dumpFile"
-		         ref={(elem) => this.dumpFileDom = elem } onChange={this.readDump} />
-			{/*<textarea ref={(elem) => this.dumpTextArea = elem } id="loader-dump"></textarea>*/}
+                <textarea ref={elem => this.codeTextDom = elem} id="code-text"/>
+				<textarea ref={elem => this.inputTextDom = elem} id="input-text"/>
 			</div>
+			<button onClick={this.request}>Compile and Run!</button>
 		</div>;
 	}
 }
