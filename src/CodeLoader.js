@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import AJAX from "./sa";
-import * as HrmInterpreter from "hrm-interpreter-wasm";
+let HrmInterpreter = import("hrm-interpreter-wasm");
 
 export class CodeLoader extends Component {
 
@@ -29,48 +29,12 @@ export class CodeLoader extends Component {
 	}
 
 	onLoadClicked = () => {
-		// const code = this.dejsonifyCode();
-		// this.props.onLoad(code, this.dumps);
 		if(this.code === null || this.dumps === null) {
 			alert("you need to load both the code file and the dump file!");
 		}
 		else {
 			this.props.onLoad(this.code, this.dumps);
 		}
-	}
-
-	parse_dump_line = (line) => {
-		try{
-			return JSON.parse(line);
-		}
-		catch(e){
-			console.log("parse_dump_line breaks here", line, e);
-			return null;
-		}
-	}
-
-	// readCode = (evt) => {
-	// 	let file = evt.target.files[0];
-	// 	let reader = new FileReader();
-	// 	var self = this;
-	// 	reader.onload = (e) => {
-	// 		const orig = e.target.result;
-	// 		self.code = this.dejsonify(orig);
-	// 	}
-	// 	reader.readAsText(file);
-	// }
-
-	readDump = (evt) => {
-		let file = evt.target.files[0];
-		let reader = new FileReader();
-		var self = this;
-		reader.onload = (e) => {
-			const orig = e.target.result;
-			const lines = orig.split("\n");
-			const parsed_lines = lines.map(this.parse_dump_line).filter(line => !!line);
-			self.dumps = parsed_lines;
-		}
-		reader.readAsText(file);
 	}
 
     request = () => {
@@ -82,42 +46,36 @@ export class CodeLoader extends Component {
         }
 
         ajax.post('http://127.0.0.1:5000/build', (jsonAssembledCode) => {
-            // ajax.post('http://127.0.0.1:5000/run', (executionStatesList) => {
-            //     this.code = this.dejsonify(JSON.stringify(JSON.parse(jsonAssembledCode).code));
-            //     this.dumps = JSON.parse(executionStatesList).states;
-            //     this.onLoadClicked();
-            // }, function (statusCode) { // Handle failure
-            //     console.log("run error: ", statusCode);
-            //     alert("could not run the application!?!?!?!");
-            // }, JSON.stringify({
-            //     code: JSON.parse(jsonAssembledCode).code,
-            //     input: JSON.parse(this.inputTextDom.value)
-            // }));
-            let interpr = HrmInterpreter.InterpreterInterface.create(
-            	jsonAssembledCode, this.inputTextDom.value);
+            let jsonInputFromTextDom = this.inputTextDom.value;
+            HrmInterpreter.then((module) => {
+                let jsonCode = JSON.stringify(JSON.parse(jsonAssembledCode).code);
+                console.log("jsonAssembledCode", jsonCode);
+                console.log("state", jsonInputFromTextDom);
+                let interpr = module.InterpreterInterface.create(jsonCode, jsonInputFromTextDom);
 
-            let error = false;
-            let intermediate_steps = [];
-            do {
-                let maybe_reason = interpr.next();
-                error = !!maybe_reason;
-                console.log("interpr - next", maybe_reason);
-                let jsonify = interpr.jsonify();
-                intermediate_steps.push(jsonify);
-                console.log("interpr - jsonify", jsonify);
-            } while (!error);
+                let error = false;
+                let intermediate_steps = [];
+                do {
+                    let maybe_reason = interpr.next();
+                    error = !!maybe_reason;
+                    console.log("interpr - next", maybe_reason);
+                    let jsonify = interpr.jsonify();
+                    intermediate_steps.push(jsonify);
+                    console.log("interpr - jsonify", jsonify);
+                } while (!error);
 
-            this.code = this.dejsonify(JSON.stringify(JSON.parse(jsonAssembledCode).code));
-            this.dumps = intermediate_steps.map(json_step => {
-            	let step = JSON.parse(json_step);
-            	return {
-            		internal_state: step.state,
-					ended_with_error: step.ended_with_error,
-					error_reason: step.reason ? step.reason : ""
-				};
-			});
-            this.onLoadClicked();
+                this.code = this.dejsonify(jsonCode);
+                this.dumps = intermediate_steps.map(json_step => {
+                    let step = JSON.parse(json_step);
+                    return {
+                        internal_state: step.state,
+                        ended_with_error: step.ended_with_error,
+                        error_reason: step.reason ? step.reason : ""
+                    };
+                });
+                this.onLoadClicked();
 
+            });
         }, function (statusCode) {
             console.log("build error: ", statusCode);
             alert("there was an error while compiling. syntax error, maybe?");
