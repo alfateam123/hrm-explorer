@@ -1,5 +1,6 @@
 import React, {Component} from "react";
 import AJAX from "./sa";
+import * as HrmInterpreter from "hrm-interpreter-wasm";
 
 export class CodeLoader extends Component {
 
@@ -81,17 +82,41 @@ export class CodeLoader extends Component {
         }
 
         ajax.post('http://127.0.0.1:5000/build', (jsonAssembledCode) => {
-            ajax.post('http://127.0.0.1:5000/run', (executionStatesList) => {
-                this.code = this.dejsonify(JSON.stringify(JSON.parse(jsonAssembledCode).code));
-                this.dumps = JSON.parse(executionStatesList).states;
-                this.onLoadClicked();
-            }, function (statusCode) { // Handle failure
-                console.log("run error: ", statusCode);
-                alert("could not run the application!?!?!?!");
-            }, JSON.stringify({
-                code: JSON.parse(jsonAssembledCode).code,
-                input: JSON.parse(this.inputTextDom.value)
-            }));
+            // ajax.post('http://127.0.0.1:5000/run', (executionStatesList) => {
+            //     this.code = this.dejsonify(JSON.stringify(JSON.parse(jsonAssembledCode).code));
+            //     this.dumps = JSON.parse(executionStatesList).states;
+            //     this.onLoadClicked();
+            // }, function (statusCode) { // Handle failure
+            //     console.log("run error: ", statusCode);
+            //     alert("could not run the application!?!?!?!");
+            // }, JSON.stringify({
+            //     code: JSON.parse(jsonAssembledCode).code,
+            //     input: JSON.parse(this.inputTextDom.value)
+            // }));
+            let interpr = HrmInterpreter.InterpreterInterface.create(
+            	jsonAssembledCode, this.inputTextDom.value);
+
+            let error = false;
+            let intermediate_steps = [];
+            do {
+                let maybe_reason = interpr.next();
+                error = !!maybe_reason;
+                console.log("interpr - next", maybe_reason);
+                let jsonify = interpr.jsonify();
+                intermediate_steps.push(jsonify);
+                console.log("interpr - jsonify", jsonify);
+            } while (!error);
+
+            this.code = this.dejsonify(JSON.stringify(JSON.parse(jsonAssembledCode).code));
+            this.dumps = intermediate_steps.map(json_step => {
+            	let step = JSON.parse(json_step);
+            	return {
+            		internal_state: step.state,
+					ended_with_error: step.ended_with_error,
+					error_reason: step.reason ? step.reason : ""
+				};
+			});
+            this.onLoadClicked();
 
         }, function (statusCode) {
             console.log("build error: ", statusCode);

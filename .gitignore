@@ -19,3 +19,10 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+.hrmexplorer/
+.idea/
+3.4.0.tar.gz
+brython-3.4.0/
+node_modules_backup/
+yarn.lock
