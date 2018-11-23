@@ -17,25 +17,27 @@ class Explorer extends Component {
 		}
 	}
 
+    getError = (dump) => {
+        return dump.ended_with_error ? dump.error_reason : null;
+    };
 
 	showPrev = () => {
 		if(this.state.index <= 0) return;
 		this.setState({
-			error: null,
+			error: this.getError(this.dumps[this.state.index-1]),
 			currentDump: this.dumps[this.state.index-1],
 			index: this.state.index-1
 		});
-	}
+	};
 
 	showNext = () => {
 		if(this.state.index+1 === this.dumps.length) return;
-		console.log(this.dumps[this.state.index+1]);
 		this.setState({
-			error: null,
+            error: this.getError(this.dumps[this.state.index+1]),
 			currentDump: this.dumps[this.state.index+1],
 			index: this.state.index+1
 		});
-	}
+	};
 
 	reset = () => {
 		this.setState({
@@ -61,33 +63,40 @@ class Explorer extends Component {
 		this.setState({
 			breakpoints: newBreakpoints
 		});
-	}
+	};
 
 	run = () => {
 		try {
 			// index+1 to make RUN work when a breakpoint is enabled
 			// on the current instruction counter
-			let index = this.state.index+1
+			let index = this.state.index+1;
 			let currentDump = this.dumps[index];
 			let ic = currentDump.internal_state.instruction_counter;
 
-			while(!this.isBreakpointEnabledOn(ic)) {
+			let noMoreDumps = false;
+			while(!this.isBreakpointEnabledOn(ic) && !noMoreDumps) {
 				currentDump = this.dumps[index+1];
-				index += 1;
-				ic = currentDump.internal_state.instruction_counter;
+
+				if(currentDump) {
+                    index += 1;
+                    ic = currentDump.internal_state.instruction_counter;
+				}
+				else {
+					noMoreDumps = true;
+				}
 			}
 
 			this.setState({
 				currentDump: this.dumps[index],
 				index: index,
-				error: null
+                error: this.getError(this.dumps[index])
 			});
 		} catch (e) {
 			this.setState({
 				error: "Reached the end of the execution without hitting any breakpoint! Click Reset to start again, and then set a breakpoint"
 			});
 		}
-	}
+	};
 
 	render() {
 		return <div className="explorer-container">
@@ -99,8 +108,7 @@ class Explorer extends Component {
 					showPrev={this.showPrev}
 					showNext={this.showNext}
 					reset={this.reset}
-					run={this.run}
-		 	/>
+					run={this.run}/>
 				<CodeStateViewer errors={this.state.error} dump={this.state.currentDump} />
 			</div>
 		</div>;
