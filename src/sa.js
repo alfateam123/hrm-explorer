@@ -38,11 +38,11 @@ let AJAX = function(CORS){
 
     // define private functions, used to make request handling smarter
     var _smartQueryString = function(parameters) {
-        if(typeof(parameters) == 'string') {
+        if(typeof(parameters) === 'string') {
             return parameters;
         }
 
-        if(typeof(parameters) == 'object') {
+        if(typeof(parameters) === 'object') {
             //Translate JSON object to a query string
             // { foo:bar, what:yellow} becomes: foo=bar&what=yellow
             var str = '';
@@ -65,34 +65,34 @@ let AJAX = function(CORS){
         //abort after 30 seconds of delay in response
         var timeout = setTimeout(function() { xhr.abort();}, 30000);
         //Handle CORS
-        req.url = typeof(CORS) == 'undefined' ? "//" + document.domain + req.url : req.url;
+        req.url = (CORS === undefined) ? "//" + document.domain + req.url : req.url;
         console.log("log from _request, req.url = ", req.url);
         xhr.onreadystatechange = function() {
             //console.log("log from xhr.onreadystatechange", xhr.responseText);
             //console.log(xhr.readyState, xhr.status);
-            if (xhr.readyState == 4 && xhr.status == 200) {
-                if(typeof(req.success) == 'function') {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                if(typeof(req.success) === 'function') {
                     clearTimeout(timeout);
-                    req.success( req.dataType && req.dataType.toUpperCase() == 'JSON' ?
+                    req.success( req.dataType && req.dataType.toUpperCase() === 'JSON' ?
                         JSON.parse(xhr.responseText) :
-                        req.dataType && req.dataType.toUpperCase() == 'XML' ?
+                        req.dataType && req.dataType.toUpperCase() === 'XML' ?
                             xhr.responseXML :
                             xhr.responseText);
                 }
             } else {
-                if(xhr.readyState == 4) { //call error function only when request has completed
+                if(xhr.readyState === 4) { //call error function only when request has completed
                     console.log("uhm, failing, but... ", xhr.responseText.length);
                     //console.log("sa: ", req);
                     if(xhr.responseText.length > 0){
                         //fix some shit in FF31 and previous with local files
                         clearTimeout(timeout);
-                        req.success( req.dataType && req.dataType.toUpperCase() == 'JSON' ?
+                        req.success( req.dataType && req.dataType.toUpperCase() === 'JSON' ?
                             JSON.parse(xhr.responseText) :
-                            req.dataType.toUpperCase() == 'XML' ? xhr.responseXML :
+                            req.dataType.toUpperCase() === 'XML' ? xhr.responseXML :
                                 xhr.responseText);
                         return;
                     }
-                    if(typeof(req.failure) == 'function') {
+                    if(typeof(req.failure) === 'function') {
                         clearTimeout(timeout);
                         req.failure(xhr.status);
                     }
@@ -100,12 +100,12 @@ let AJAX = function(CORS){
             }
         };
 
-        if(req.type.toLowerCase() == 'get') {
+        if(req.type.toLowerCase() === 'get') {
             xhr.open("GET", req.url, true);
             // Set header so the called script knows that it's an XMLHttpRequest
             xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
             xhr.send();
-        } else if(req.type.toLowerCase() == 'post') {
+        } else if(req.type.toLowerCase() === 'post') {
             req.data = _smartQueryString(req.data);
             xhr.open("POST", req.url , true);
             // Set header so the called script knows that it's an XMLHttpRequest
